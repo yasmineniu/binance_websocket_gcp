@@ -58,6 +58,23 @@ python3 feeds/binance_feed.py
 
 - `scripts/setup_gcp_resources.sh`: Automates the creation of Pub/Sub topics and BigQuery datasets.
 - `scripts/clear_all_tables.sh`: (Caution) Clears data from BigQuery tables.
+- `scripts/run_dq_checks.sh`: Runs BigQuery SQL checks to validate data quality.
+
+### Data Quality Checks
+
+The `run_dq_checks.sh` script performs the following validations:
+
+1.  **Latency Check**:
+    - Calculates average and p99 latency between `event_ts` and `receipt_ts`.
+    - Helps identify network delays or clock synchronization issues.
+
+2.  **Sequence Gap Check**:
+    - Detects missing `seq_id` in L2 data.
+    - Identifies potential packet loss in the WebSocket feed.
+
+3.  **Stream Alignment**:
+    - Compares the freshness of L2 vs. Trade data.
+    - Detects "frozen" streams where one feed stops updating while the other continues.
 
 ## Data Flow
 
