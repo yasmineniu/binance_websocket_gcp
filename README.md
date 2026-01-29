@@ -84,6 +84,29 @@ The `run_dq_checks.sh` script performs the following validations:
     - **Ticker/Trades**: deserializes and formats data.
 3.  **Publish**: `util_publish/emit.py` pushes JSON messages to Pub/Sub topics (e.g., `crypto.binance.l2`).
 
+## Performance Optimization (High Frequency)
+To handle the immense volume of Binance L2 updates (thousands/sec) on small cloud instances, the following optimizations were applied:
+
+### A. Throughput Tuning
+
+1. **Batch Publishing**:
+    - `BatchSettings`: Buffer up to **2500 messages** or **100ms** latency.
+    - `publish_batch()`: Python-side optimization to reduce loop overhead.
+2. **Serialization**: Replaced json with **`orjson`** (Rust-based, ~10x faster).
+3. **Event Loop**: Switched to **`uvloop`** for high-performance AsyncIO.
+4. removing logger to reduce the IO
+
+### B. Deep Update Filtering (Smart Filter)
+
+- **Logic**: High-frequency updates often occur deep in the order book (e.g., price level 500).
+- **Optimization**: In l2_event.py, we check if the update price exists in our local **Top 30** book.
+    - If `Yes` -> Publish.
+    - If `No` -> **Drop** (Ignore).
+- **Impact**:
+    - Reduces Pub/Sub volume by ~90%.
+    - **Sequence Gaps**: You _will_ see gaps in the sequence ID check. **This is expected behavior.** We are intentionally skipping updates for deep levels, so the sequence IDs will appear roughly consecutive but with jumps.
+
+
 
 ## Test Result from run_dq_checks.sh on local:
 <img width="627" height="324" alt="image" src="https://github.com/user-attachments/assets/6db52de2-4c08-48b9-9dcd-0030921e3778" />
