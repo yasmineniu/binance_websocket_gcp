@@ -86,51 +86,9 @@ The `run_dq_checks.sh` script performs the following validations:
 
 
 ## Test Result from run_dq_checks.sh on local:
-fangxinniu@Fangxins-MacBook-Air stage_a % ./run_dq_checks.sh 
-=== 1. Latency Check (Last 1 Hour) ===
-+----------+----------+-------+--------------------+----------------+
-| exchange |  symbol  | count |   avg_latency_ms   | p99_latency_ms |
-+----------+----------+-------+--------------------+----------------+
-| binance  | BTC-USDT |  1011 | -76.89713155291791 |              0 |
-| binance  | ETH-USDT |  1079 | -78.42354031510658 |              0 |
-+----------+----------+-------+--------------------+----------------+
-=== 2. Sequence Gap Check (Potential Packet Loss) ===
-+----------+----------+------------+--------------+--------------+
-| exchange |  symbol  | gap_events | min_gap_size | max_gap_size |
-+----------+----------+------------+--------------+--------------+
-| binance  | BTC-USDT |         69 |           10 |          159 |
-| binance  | ETH-USDT |         68 |            9 |          553 |
-+----------+----------+------------+--------------+--------------+
-=== 3. Stream Alignment (Trades vs L2) ===
-+----------+----------+---------------------+---------------------+--------+
-| exchange |  symbol  |      max_l2_ts      |    max_trade_ts     | lag_ms |
-+----------+----------+---------------------+---------------------+--------+
-| binance  | ETH-USDT | 2026-01-29 06:00:33 | 2026-01-29 06:00:32 |    997 |
-| binance  | BTC-USDT | 2026-01-29 06:00:33 | 2026-01-29 06:00:33 |    492 |
-+----------+----------+---------------------+---------------------+--------+
+<img width="627" height="324" alt="image" src="https://github.com/user-attachments/assets/6db52de2-4c08-48b9-9dcd-0030921e3778" />
 
 
 ## Test Result from GCP running on GCP:
 e2-micro (2 vCPUs, 1 GB Memory)
-(venv) niujasmine01@instance-20260126-133029:~/binance_websocket_gcp/scripts$ ./run_dq_checks.sh 
-=== 1. Latency Check (Last 1 Hour) ===
-+----------+----------+-------+-------------------+----------------+
-| exchange |  symbol  | count |  avg_latency_ms   | p99_latency_ms |
-+----------+----------+-------+-------------------+----------------+
-| binance  | BTC-USDT |  3749 | 3.443851693785009 |             10 |
-| binance  | ETH-USDT |  5214 | 5.035097813578823 |             16 |
-+----------+----------+-------+-------------------+----------------+
-=== 2. Sequence Gap Check (Potential Packet Loss) ===
-+----------+----------+------------+--------------+--------------+
-| exchange |  symbol  | gap_events | min_gap_size | max_gap_size |
-+----------+----------+------------+--------------+--------------+
-| binance  | BTC-USDT |        110 |            8 |         2189 |
-| binance  | ETH-USDT |        109 |           10 |         2279 |
-+----------+----------+------------+--------------+--------------+
-=== 3. Stream Alignment (Trades vs L2) ===
-+----------+----------+---------------------+---------------------+--------+
-| exchange |  symbol  |      max_l2_ts      |    max_trade_ts     | lag_ms |
-+----------+----------+---------------------+---------------------+--------+
-| binance  | BTC-USDT | 2026-01-29 08:29:52 | 2026-01-29 08:29:52 |     66 |
-| binance  | ETH-USDT | 2026-01-29 08:29:52 | 2026-01-29 08:29:52 |     -3 |
-+----------+----------+---------------------+---------------------+--------+
+<img width="833" height="337" alt="image" src="https://github.com/user-attachments/assets/a6b55008-1d79-4e32-9ba4-b335f8d194f4" />
