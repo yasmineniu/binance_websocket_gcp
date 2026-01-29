@@ -15,7 +15,7 @@ DATASET="cryptofeed"
 # | okx      | BTC-USDT |  1309 |   8.530939648586715 |             32 |
 # | okx      | ETH-USDT |  1821 | -25.136738056013186 |            -10 |
 # +----------+----------+-------+---------------------+----------------+
-# 总结：负值通常是由于两台服务器时间基准不一致造成的相对误差。只要 P99 的波动（Jitter）不大，负值也是可以接受的，它更多反映的是“时钟差”而不是“网络延迟”。
+# Summary: Negative values typically result from clock skew between servers. As long as P99 jitter is low, negative values are acceptable as they indicate clock offset rather than network latency.
 
 
 echo "=== 1. Latency Check (Last 1 Hour) ==="
@@ -70,15 +70,15 @@ SELECT
 FROM sequenced
 WHERE seq_id - prev_seq_id > 1
   AND TIMESTAMP_DIFF(event_ts, prev_event_ts, SECOND) < 5
-  # 预防假报警
+  # Prevent false positives
 GROUP BY 1, 2
 "
 
 # 3. Time Alignment (Freshness)
-# “同一个交易所的两个频道（比如 L2 和 Trades），它们的时间进度应该是差不多的。
-# 1. for example, l2_book has a lot of data (process ts is 10:00:05) and block the trade event loop (process ts is 10:00:00).
-# 2. 检测 WebSocket 假死：有时候网络出问题，Trades 的链接断了不再推数据，但 L2 还是好的。通过对比，你能立刻发现 Trades 停更了。
-# 3. 对齐回测数据：如果两条流的时间差太大，以此生成的策略信号可能是错的（比如用 5秒前的成交价去对齐现在的盘口，会产生错误的套利信号）。
+# "Two channels from the same exchange (e.g., L2 and Trades) should have roughly synchronized timestamps.
+# 1. For example, l2_book has a lot of data (process ts is 10:00:05) and block the trade event loop (process ts is 10:00:00).
+# 2. Detect WebSocket stalls: Sometimes network issues break the Trades connection while L2 remains active. Comparison reveals if Trades have stopped updating.
+# 3. Data Alignment for Backtesting: Significant time skew between streams can lead to incorrect strategy signals (e.g., matching a 5-second old trade price with the current order book generating false arbitrage signals).
 echo "=== 3. Stream Alignment (Trades vs L2) ==="
 bq query --use_legacy_sql=false --format=pretty "
 WITH l2_freshness AS (
