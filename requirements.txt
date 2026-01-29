@@ -1,3 +1,5 @@
 cryptofeed
 google-cloud-pubsub
 google-cloud-bigquery
+uvloop
+orjson

@@ -1,4 +1,4 @@
-import json
+import orjson
 import time
 from google.cloud import pubsub_v1
 from constant import EXCHANGES, DATATYPES
@@ -14,11 +14,20 @@ logger = logging.getLogger('emit')
 PROJECT_ID = "cryptofeed-480903"
 publisher = pubsub_v1.PublisherClient()
 
+# Optimization: Batch publishing to reduce CPU overhead
+batch_settings = pubsub_v1.types.BatchSettings(
+    max_messages=2500,  # default 100
+    max_bytes=1024 * 1024,  # 1 MB
+    max_latency=0.1,  # 50ms buffer (default 10ms)
+)
+publisher = pubsub_v1.PublisherClient(batch_settings=batch_settings)
+
+
 def get_callback(future, data):
     def callback(future):
         try:
             message_id = future.result()
-            logger.info(f"Published message ID: {message_id}")
+            # logger.info(f"Published message ID: {message_id}")
         except Exception as e:
             logger.error(f"Publishing failed: {e}")
     return callback
@@ -37,12 +46,10 @@ def publish(exchange: str, datatype: str, payload: dict):
     topic_id = f"crypto.{exchange}.{datatype}"
     topic_path = publisher.topic_path(PROJECT_ID, topic_id)
 
-    # 加上统一的 ingest 时间戳
-    payload["ingest_ts"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    payload["ingest_ts"] = datetime.datetime.now(datetime.timezone.utc)
 
-    data = json.dumps(payload).encode("utf-8")
+    data = orjson.dumps(payload)
     ordering_key=payload["symbol"]
-    logger.info(f"Publishing to {topic_path}: {len(data)} bytes")
+    # logger.info(f"Publishing to {topic_path}: {len(data)} bytes")
     future = publisher.publish(topic_path, data)
     future.add_done_callback(get_callback(future, data))
-

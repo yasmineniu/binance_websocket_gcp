@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 import os
 import asyncio
@@ -8,7 +7,6 @@ from logging import getLogger
 current_dir = os.path.dirname(os.path.abspath(__file__))
 stage_a_dir = os.path.dirname(current_dir)
 project_root = os.path.dirname(stage_a_dir)
-sys.path.append(stage_a_dir)
 sys.path.append(stage_a_dir)
 
 from cryptofeed import FeedHandler
@@ -35,7 +33,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = getLogger('binance_feed')
 
 async def handle_l2(book: OrderBook, receipt_timestamp, **kwargs):
-    logger.info(f"Received L2 book update for {book.symbol}")
+    # logger.info(f"Received L2 book update for {book.symbol}")
     payloads = build_l2_event(book, receipt_timestamp)
     for payload in payloads:
         publish(book.exchange.lower(), 'l2', payload)
@@ -50,12 +48,12 @@ async def handle_l2(book: OrderBook, receipt_timestamp, **kwargs):
             last_factor_ts[symbol] = current_ts
 
 async def handle_ticker(ticker: Ticker, receipt_timestamp, **kwargs):
-    logger.info(f"Received ticker update for {ticker.symbol}")
+    # logger.info(f"Received ticker update for {ticker.symbol}")
     payload = build_ticker_event(ticker, receipt_timestamp)
     publish(ticker.exchange.lower(), 'ticker', payload)
 
 async def handle_trade(trade, receipt_timestamp, **kwargs):
-    logger.info(f"Received trade update for {trade.symbol}")
+    # logger.info(f"Received trade update for {trade.symbol}")
     payload = build_trade_event(trade, receipt_timestamp)
     publish(trade.exchange.lower(), 'trades', payload)
 
@@ -73,12 +71,6 @@ def main():
         asyncio.set_event_loop(asyncio.new_event_loop())
 
     logger.info("Adding feed...")
-    # HTTP Proxy for Binance/OKX if needed
-    # proxy = "http://127.0.0.1:7890" # Example user proxy
-    # We can pass http_proxy to Feed/Exchange classes if we instantiated them manually, 
-    # but here we pass classes. FeedHandler doesn't easily propagate proxy to class-based add_feed?
-    # Actually FeedHandler.add_feed accepts **kwargs which are passed to Feed __init__.
-    
     fh.add_feed(
         Binance(
             symbols=['BTC-USDT', 'ETH-USDT'],
@@ -88,7 +80,9 @@ def main():
                 TRADES: handle_trade,
                 L2_BOOK: handle_l2,
             },
-            max_depth=30
+            max_depth=30,
+            checksum_validation=False,
+            cross_check=False
         )
     )
     logger.info("Feed added. Running FeedHandler...")

@@ -12,7 +12,13 @@ def build_l2_event(book, receipt_timestamp):
         for side_name, delta_list in book.delta.items():
             side_name = 'bid' if side_name == BID else 'ask'
             # side_name is 'bid' or 'ask'
+            target_book = book.book.bids if side_name == BID else book.book.asks
             for price, amount in delta_list:
+                # OPTIMIZATION: Skip updates (amount > 0) that are outside the Top N (not in book)
+                # This significantly reduces Pub/Sub volume for deep/irrelevant levels.
+                if amount > 0 and price not in target_book:
+                    continue
+                
                 payload = {
                     "type": "delta",
                     "exchange": book.exchange.lower(),
@@ -28,13 +34,11 @@ def build_l2_event(book, receipt_timestamp):
                 }
                 payloads.append(payload)
     else:
-        # 处理 Bids
-        # 【关键修正】: Snapshot 是字典，必须用 .items()
         if book.book.bids:
             for price in book.book.bids:
                 amount = book.book.bids[price]
                 payload = {
-                    "type": "snapshot", # 标记这是快照
+                    "type": "snapshot",
                     "exchange": book.exchange.lower(),
                     "symbol": book.symbol,
                     "side": "bid",
@@ -48,7 +52,6 @@ def build_l2_event(book, receipt_timestamp):
                 }
                 payloads.append(payload)
         
-        # 处理 Asks (同上)
         if book.book.asks:
             for price in book.book.asks:
                 amount = book.book.asks[price]
